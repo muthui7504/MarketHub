@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import User from './userModels.js'; // Import the User model
 
 const supplierSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -12,5 +13,4 @@ const supplierSchema = new mongoose.Schema({
 });
 
 const supplierModel = mongoose.model('Supplier', supplierSchema);
-
 export default supplierModel;

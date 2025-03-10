@@ -1,11 +1,21 @@
 import Product from '../models/Product.js';
+import Supplier from '../models/supplierModel.js';
 
 // Create a new product
 
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, price, category, quantity, imageUrl } = req.body;
-    const supplier = req.user.id; // Get supplierId from authenticated user's token
+    const { name, description, price, category, quantity } = req.body;
+    const userId = req.user.id;
+
+    // Get the supplier ID from the logged-in user
+    const supplier = await Supplier.findOne({ user: userId });
+    if (!supplier) {
+      return res.status(404).json({ success: false, message: 'Supplier not found' });
+    }
+
+    // Handle multiple images (assuming only one is required, pick the first one)
+    const image = req.file ? `/uploads/${req.file.filename}` : null;
 
     const available = quantity > 0; // Set availability based on quantity
 
@@ -14,9 +24,9 @@ export const createProduct = async (req, res) => {
       description,
       price,
       category,
-      supplier,
+      supplier: supplier._id, // Set supplier field correctly
       quantity,
-      imageUrl,
+      image,
       available,
     });
 
@@ -27,19 +37,28 @@ export const createProduct = async (req, res) => {
   }
 };
 
-// Get all products for the logged-in user (supplier)
+
+
 // Get all products for the logged-in user (supplier)
 export const getProducts = async (req, res) => {
   try {
-    const supplier = req.user.id; // This is the logged-in user's ID
+    const userId = req.user.id; // This is the logged-in user's ID
 
-    const products = await Product.find({ supplier }).populate('supplier', 'name');
+    // Find the supplier associated with the logged-in user
+    const supplier = await Supplier.findOne({ user: userId });
+    if (!supplier) {
+      return res.status(404).json({ success: false, message: 'Supplier not found' });
+    }
+
+    // Fetch the products for this supplier
+    const products = await Product.find({ supplier: supplier._id }).populate('supplier', 'name');
 
     res.status(200).json({ success: true, products });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch products', error: error.message });
   }
 };
+
 
 
 
@@ -50,11 +69,20 @@ export const getAllProducts = async (req, res) => {
     let products;
 
     if (category) {
-      products = await Product.find({ category }).populate('supplier', 'name'); // Filter by category
-    } else if (supplier) { 
-      products = await Product.find({ supplier }).populate('supplier', 'name'); // Filter by supplier
+      // Filter by category and sort by creation date
+      products = await Product.find({ category })
+        .populate('supplier', 'name')
+        .sort({ createdAt: -1 });
+    } else if (supplier) {
+      // Filter by supplier and sort by creation date
+      products = await Product.find({ supplier })
+        .populate('supplier', 'name')
+        .sort({ createdAt: -1 });
     } else {
-      products = await Product.find().populate('supplier', 'name');
+      // Fetch all products and sort by creation date
+      products = await Product.find()
+        .populate('supplier', 'name')
+        .sort({ createdAt: -1 });
     }
 
     res.status(200).json({ success: true, products });
@@ -63,10 +91,12 @@ export const getAllProducts = async (req, res) => {
   }
 }
 
+
 // Get a single product by ID
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.productId).populate('supplier', 'name');
+    const product = await Product.findById(req.params.productId)
+      .populate('supplier', 'name contact email'); // Populate with more fields
 
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
@@ -78,11 +108,12 @@ export const getProductById = async (req, res) => {
   }
 };
 
+
 // Update a product
 // Update a product
 export const updateProduct = async (req, res) => {
   try {
-    const { name, description, price, category, quantity, imageUrl } = req.body;
+    const { name, description, price, category, quantity, image } = req.body;
 
     // Determine availability based on quantity
     const available = quantity > 0 ? true : false;
@@ -95,7 +126,7 @@ export const updateProduct = async (req, res) => {
         price, 
         category, 
         quantity, 
-        imageUrl, 
+        image, 
         available, // Update availability based on quantity
         updatedAt: Date.now() 
       },
@@ -126,3 +157,12 @@ export const deleteProduct = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to delete product', error: error.message });
   }
 };
+
+export const deleteAllProduct = async (req, res) => {
+  try {
+    await Product.deleteMany();
+    res.status(200).json({ success: true, message: 'All products deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to delete products', error: error.message });
+  }
+}

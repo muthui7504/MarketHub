@@ -6,7 +6,10 @@ import {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
-  deleteOrder
+  deleteOrder,
+  totalOrdersBySupplier,
+  getRecentOrdersBySeller
+  //deleteAllProduct 
 } from '../controllers/orderControllers.js'; // Import order controller functions
 import userAuth from '../middleware/userAuth.js'; // Authentication middleware
 
@@ -19,6 +22,8 @@ router.post('/', userAuth, createOrder);
 // Route for getting all orders of a specific supplier (authenticated supplier)
 router.get('/supplier', userAuth, getOrdersBySupplier);
 
+router.get('/recent-orders', userAuth, getRecentOrdersBySeller);
+
 // Route for getting all orders of a specific seller (authenticated seller)
 router.get('/seller', userAuth, getOrdersBySeller);
 
@@ -26,12 +31,17 @@ router.get('/seller', userAuth, getOrdersBySeller);
 router.get('/', userAuth, getAllOrders);
 
 // Route for getting a single order by its ID (authenticated user)
-router.get('/orders/:orderId', userAuth, getOrderById);
+router.get('/:orderId', userAuth, getOrderById);
 
 // Route for updating an order's status (authenticated supplier)
-router.patch('/orders/:orderId/status', userAuth, updateOrderStatus);
+router.patch('/:orderId/:status', userAuth, updateOrderStatus);
 
 // Route for deleting an order (authenticated user)
-router.delete('/orders/:orderId', userAuth, deleteOrder);
+router.delete('/:orderId', userAuth, deleteOrder);
+
+router.get('/total-orders' , userAuth, totalOrdersBySupplier);
+
+
+//router.delete('/delete-all-products', userAuth, deleteAllProduct);
 
 export default router;

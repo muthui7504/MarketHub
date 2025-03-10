@@ -4,12 +4,12 @@ const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: String,
   price: { type: Number, required: true },
-  category: String,
+  category: { type: String },
   quantity: { type: Number, required: true },
   supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier', required: true },
   available: { type: Boolean, default: false },
-  images: [String], // Array of image URLs
-});
+  image: { type: String, default: '' }, // Image URL
+}, { timestamps: true });  // Automatically adds createdAt and updatedAt fields
 
 const Product = mongoose.model('Product', productSchema);
 

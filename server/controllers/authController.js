@@ -8,6 +8,9 @@ import sellerModel from '../models/sellerModel.js';
 
 export const Register = async (req, res) => {
     const { name, email, password, userType } = req.body;
+    const image = req.file ? `/uploads/${req.file.filename}` : null;
+  
+
 
     if (!name || !email || !password || !userType) {
         return res.json({ success: false, message: 'Missing details' });
@@ -29,6 +32,7 @@ export const Register = async (req, res) => {
             email,
             password: hashedPassword,
             userType: userType.toLowerCase(),
+            image,
         });
 
         await user.save();
@@ -336,5 +340,37 @@ export const deleteallsuppliers = async (req, res) =>{
         return res.json({success:true, message:'all suppliers deleted successfully'})
     }catch(error){
         return res.json({success:false, message:error.message})
+    }
+}
+
+export const deleteallsellers = async (req, res) =>{
+    try{
+        const result = await sellerModel.deleteMany()
+        return res.json({success:true, message:'all sellers deleted successfully'})
+    }catch(error){
+        return res.json({success:false, message:error.message})
+    }
+}
+export const deleteallusers = async (req, res) =>{
+    try{
+        const result = await userModel.deleteMany()
+        return res.json({success:true, message:'all users deleted successfully'})
+    }catch(error){
+        return res.json({success:false, message:error.message})
+    }
+}
+
+export const getUser = async (req, res) => {
+    try {
+        const user = await userModel.findById(req.user.id
+            ).select('-password');
+        if (!user) {
+            return res.status(400).json({ msg: 'User Not Found' });
+        }
+        res.json(user);
+    }   
+    catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
     }
 }
